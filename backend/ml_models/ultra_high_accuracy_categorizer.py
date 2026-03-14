@@ -768,11 +768,13 @@ class UltraHighAccuracyCategorizer:
             self.label_encoder = data.get('label_encoder')
             self.categories = data.get('categories', self.categories)
             self.is_trained = data.get('is_trained', False)
-            
+
             if self.pipeline is None or self.label_encoder is None:
                 raise ValueError("Model file is corrupted")
-                
+
             print(f"Model loaded from {filepath}")
+            print(f"Model is_trained: {self.is_trained}")
+            print(f"Model categories: {len(self.categories)}")
         except Exception as e:
             print(f"Error loading model: {e}")
             raise
