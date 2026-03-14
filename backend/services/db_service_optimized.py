@@ -139,7 +139,7 @@ class DBService:
     def get_category_breakdown(self, user_id: int) -> List[Dict[str, Any]]:
         """Get category breakdown (single optimized query)"""
         query = """
-        SELECT c.name as category, SUM(t.amount) as amount
+        SELECT c.name as name, SUM(t.amount) as amount, COUNT(t.id) as count
         FROM transactions t
         JOIN categories c ON t.category_id = c.id
         WHERE t.user_id = %s AND t.type = 'Expense'
@@ -152,19 +152,28 @@ class DBService:
             rows = cursor.fetchall()
             cursor.close()
 
-        return [dict(row) for row in rows]
+        # Convert to format expected by templates (category, amount, count)
+        result = []
+        for row in rows:
+            row_dict = dict(row)
+            result.append({
+                'category': row_dict['name'],
+                'amount': float(row_dict['amount']) if row_dict['amount'] else 0,
+                'count': row_dict['count'] if row_dict['count'] else 0
+            })
+        return result
 
     def get_weekly_expenses(self, user_id: int, weeks: int = 4) -> List[Dict[str, Any]]:
         """Get weekly expenses using SQL aggregation (fast)"""
         query = """
-        SELECT 
-            DATE_TRUNC('week', date) as week_start,
+        SELECT
+            DATE_TRUNC('week', date) as week,
             SUM(amount) as amount
         FROM transactions
         WHERE user_id = %s AND type = 'Expense'
         AND date >= CURRENT_DATE - INTERVAL '%s weeks'
         GROUP BY DATE_TRUNC('week', date)
-        ORDER BY week_start DESC
+        ORDER BY week ASC
         """
         with get_db_connection() as conn:
             cursor = conn.cursor(cursor_factory=RealDictCursor)
@@ -172,7 +181,25 @@ class DBService:
             rows = cursor.fetchall()
             cursor.close()
 
-        return [dict(row) for row in rows]
+        # Format the data for the template
+        result = []
+        for row in rows:
+            row_dict = dict(row)
+            # Format week date as readable string
+            week_date = row_dict['week']
+            if week_date:
+                from datetime import datetime
+                if isinstance(week_date, datetime):
+                    week_str = week_date.strftime('%b %d')
+                else:
+                    week_str = str(week_date)[:10]
+            else:
+                week_str = ''
+            result.append({
+                'week': week_str,
+                'amount': float(row_dict['amount']) if row_dict['amount'] else 0
+            })
+        return result
 
     def get_monthly_expenses(self, user_id: int, months: int = 6) -> List[Dict[str, Any]]:
         """Get monthly expenses using SQL aggregation (fast)"""

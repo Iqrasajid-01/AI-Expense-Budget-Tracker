@@ -57,7 +57,7 @@
                     <i class="fas fa-chart-pie me-2"></i>Expenses by Category
                 </div>
                 <div class="card-body">
-                    <canvas id="categoryChart" height="200"></canvas>
+                    <canvas id="categoryChart" height="150"></canvas>
                 </div>
             </div>
         </div>
@@ -79,6 +79,7 @@
             <i class="fas fa-list me-2"></i>Category Breakdown
         </div>
         <div class="card-body">
+            {% if category_breakdown and category_breakdown|length > 0 %}
             <div class="table-responsive">
                 <table class="table">
                     <thead>
@@ -93,8 +94,8 @@
                         {% for category in category_breakdown %}
                         <tr>
                             <td>
-                                <span class="category-badge cat-{{ category.name|lower|replace(' ', '-')|replace('&', '') }}">
-                                    {{ category.name }}
+                                <span class="category-badge cat-{{ category.category|lower|replace(' ', '-')|replace('&', '') }}">
+                                    {{ category.category }}
                                 </span>
                             </td>
                             <td class="text-end">
@@ -102,9 +103,9 @@
                             </td>
                             <td class="text-end">
                                 <div class="progress" style="width: 150px; display: inline-block;">
-                                    <div class="progress-bar" role="progressbar" 
-                                         style="width: {{ category.percentage }}%;" 
-                                         aria-valuenow="{{ category.percentage }}" 
+                                    <div class="progress-bar" role="progressbar"
+                                         style="width: {{ category.percentage }}%;"
+                                         aria-valuenow="{{ category.percentage }}"
                                          aria-valuemin="0" aria-valuemax="100">
                                     </div>
                                 </div>
@@ -118,6 +119,16 @@
                     </tbody>
                 </table>
             </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-chart-bar" style="font-size: 3rem; color: #cbd5e1;"></i>
+                <h4 class="mt-3 text-muted">No expense data yet</h4>
+                <p class="text-muted">Add transactions to see your category breakdown</p>
+                <a href="{{ url_for('add_transaction') }}" class="btn btn-primary mt-2">
+                    <i class="fas fa-plus me-2"></i>Add Transaction
+                </a>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -200,12 +211,9 @@
 {% block extra_js %}
 <script>
 const currencySymbol = '{{ currency_symbol }}';
-console.log('Reports Page - Category Data:', {{ category_data|tojson }});
-console.log('Category Breakdown:', {{ category_breakdown|tojson }});
+const categoryBreakdown = {{ category_breakdown|default([])|tojson }};
 
-// Category Pie Chart - REAL DATA FROM DATABASE
-const categoryData = {{ category_data|default({})|tojson }};
-const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+console.log('Category Breakdown:', categoryBreakdown);
 
 // Vibrant, highly visible colors
 const vibrantColors = [
@@ -214,13 +222,19 @@ const vibrantColors = [
     '#9B59B6', '#34495E', '#F39C12', '#16A085', '#E91E63'
 ];
 
-const categories = Object.keys(categoryData);
-const amounts = Object.values(categoryData);
+// Extract categories and amounts from the breakdown array
+const categories = categoryBreakdown.map(c => c.category);
+const amounts = categoryBreakdown.map(c => c.amount);
+const totalAmount = amounts.reduce((a, b) => a + b, 0);
 
 console.log('Categories:', categories);
 console.log('Amounts:', amounts);
+console.log('Total:', totalAmount);
 
-if (categories.length > 0 && amounts.reduce((a, b) => a + b, 0) > 0) {
+// Category Pie Chart - REAL DATA FROM DATABASE
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+
+if (categories.length > 0 && totalAmount > 0) {
     new Chart(categoryCtx, {
         type: 'doughnut',
         data: {
@@ -257,8 +271,7 @@ if (categories.length > 0 && amounts.reduce((a, b) => a + b, 0) > 0) {
                         label: function(context) {
                             let label = context.label || '';
                             let value = context.parsed || 0;
-                            let total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                            let percentage = totalAmount > 0 ? ((value / totalAmount) * 100).toFixed(1) : 0;
                             return '  ' + label + ': ' + currencySymbol + value.toFixed(2) + ' (' + percentage + '%)';
                         }
                     }
@@ -268,27 +281,29 @@ if (categories.length > 0 && amounts.reduce((a, b) => a + b, 0) > 0) {
         }
     });
 } else {
-    // Show empty state message
-    categoryCtx.font = 'bold 15px Inter';
-    categoryCtx.fillStyle = '#64748b';
-    categoryCtx.textAlign = 'center';
-    categoryCtx.fillText('No expense data yet - Add transactions to see the chart!', 300, 100);
-    console.log('No expense data available');
+    // Show empty state on canvas
+    const canvas = document.getElementById('categoryChart');
+    const ctx = canvas.getContext('2d');
+    ctx.font = 'bold 16px Inter, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('No expense data yet', canvas.width / 2, canvas.height / 2 - 15);
+    ctx.font = '14px Inter, sans-serif';
+    ctx.fillText('Add transactions to see the chart', canvas.width / 2, canvas.height / 2 + 15);
 }
 
 // Top Categories Bar Chart - REAL DATA
-const categoryBreakdown = {{ category_breakdown|default([])|tojson }};
 const sortedCategories = categoryBreakdown.slice(0, 8); // Top 8
-
 const topCtx = document.getElementById('topCategoriesChart').getContext('2d');
 
 console.log('Top Categories:', sortedCategories);
 
-if (sortedCategories.length > 0) {
+if (sortedCategories.length > 0 && sortedCategories.some(c => c.amount > 0)) {
     new Chart(topCtx, {
         type: 'bar',
         data: {
-            labels: sortedCategories.map(c => c.name),
+            labels: sortedCategories.map(c => c.category),
             datasets: [{
                 label: 'Amount Spent',
                 data: sortedCategories.map(c => c.amount),
@@ -327,7 +342,16 @@ if (sortedCategories.length > 0) {
         }
     });
 } else {
-    console.log('No top categories data available');
+    // Show empty state on canvas
+    const canvas = document.getElementById('topCategoriesChart');
+    const ctx = canvas.getContext('2d');
+    ctx.font = 'bold 16px Inter, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('No spending data yet', canvas.width / 2, canvas.height / 2 - 15);
+    ctx.font = '14px Inter, sans-serif';
+    ctx.fillText('Add transactions to see the chart', canvas.width / 2, canvas.height / 2 + 15);
 }
 </script>
 {% endblock %}
