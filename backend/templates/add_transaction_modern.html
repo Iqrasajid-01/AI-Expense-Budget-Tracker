@@ -116,6 +116,7 @@
 {% block extra_js %}
 <script>
 let debounceTimer;
+let currentSuggestedCategory = '';
 document.getElementById('date').valueAsDate = new Date();
 
 document.getElementById('description').addEventListener('input', function(e) {
@@ -124,6 +125,7 @@ document.getElementById('description').addEventListener('input', function(e) {
 
     if (description.length < 3) {
         document.getElementById('mlSuggestion').classList.remove('show');
+        currentSuggestedCategory = '';
         return;
     }
 
@@ -144,16 +146,19 @@ document.getElementById('description').addEventListener('input', function(e) {
                     <span class="text-muted">AI suggestion unavailable</span>
                 `;
                 suggestionBox.classList.add('show');
+                currentSuggestedCategory = '';
                 return;
             }
 
             // Safely handle confidence value
             const confidence = data.confidence || 0;
             const confidencePercent = (confidence * 100).toFixed(0);
-            
+
+            currentSuggestedCategory = data.category;
             suggestedCategory.innerHTML = `
                 <strong>${data.category}</strong>
                 <span class="text-muted">(${confidencePercent}% confidence)</span>
+                ${confidence > 0.5 ? '<span class="ms-2 text-primary">(Press Enter to select)</span>' : ''}
             `;
             suggestionBox.classList.add('show');
 
@@ -169,8 +174,27 @@ document.getElementById('description').addEventListener('input', function(e) {
                 <span class="text-muted">AI suggestion unavailable</span>
             `;
             suggestionBox.classList.add('show');
+            currentSuggestedCategory = '';
         });
     }, 500);
+});
+
+// Enable Enter key to select AI suggested category
+document.getElementById('description').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && currentSuggestedCategory) {
+        e.preventDefault();
+        const categorySelect = document.getElementById('category');
+        categorySelect.value = currentSuggestedCategory;
+        
+        // Visual feedback
+        categorySelect.classList.add('border-success', 'border-2');
+        setTimeout(() => {
+            categorySelect.classList.remove('border-success', 'border-2');
+        }, 1000);
+        
+        // Hide suggestion box after selection
+        document.getElementById('mlSuggestion').classList.remove('show');
+    }
 });
 </script>
 {% endblock %}

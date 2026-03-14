@@ -36,12 +36,6 @@ wheels/
 htmlcov/
 .tox/
 
-# Test files - DO NOT DEPLOY
-test_*.py
-*_test.py
-*_test*.py
-test*.py
-
 # Documentation
 docs/_build/
 

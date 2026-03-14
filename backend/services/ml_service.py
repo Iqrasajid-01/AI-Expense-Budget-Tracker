@@ -31,9 +31,17 @@ class MLService:
         self.expense_categorizer = UltraHighAccuracyCategorizer()
         self.model_loaded = False
 
-        # Try to load the trained model - use absolute path
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        model_path = os.path.join(base_dir, 'ml_models', 'trained_models', 'ultra_high_accuracy_categorizer.pkl')
+        # Check if running on Vercel (serverless environment)
+        self.is_vercel = os.environ.get('VERCEL') == '1' or os.environ.get('AWS_LAMBDA_FUNCTION_NAME') is not None
+        
+        # Determine model path - use /tmp for Vercel/serverless
+        if self.is_vercel:
+            model_path = '/tmp/ultra_high_accuracy_categorizer.pkl'
+            print("ML Service: Running on Vercel/serverless - using /tmp for model storage")
+        else:
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            model_path = os.path.join(base_dir, 'ml_models', 'trained_models', 'ultra_high_accuracy_categorizer.pkl')
+        
         print(f"ML Service: Looking for model at {model_path}")
         print(f"ML Service: Model file exists: {os.path.exists(model_path)}")
 
@@ -57,7 +65,7 @@ class MLService:
             try:
                 print("ML Service: Training new ultra high-accuracy model...")
                 self.train_categorizer()
-                self.expense_categorizer.save_model()
+                self.expense_categorizer.save_model(model_path)
                 self.model_loaded = True
                 print("ML Service: Model trained successfully")
             except Exception as e:
@@ -77,11 +85,22 @@ class MLService:
         Returns (category, confidence_score)
         """
         try:
-            if not self.model_loaded or not self.expense_categorizer.is_trained:
-                # Return a default category with 0 confidence if model not loaded
+            if not self.model_loaded:
+                print(f"ML Service: Model not loaded, returning Unknown for: {description}")
                 return "Unknown", 0.0
+            
+            if not self.expense_categorizer.is_trained:
+                print(f"ML Service: Categorizer not trained, training now...")
+                try:
+                    self.train_categorizer()
+                    self.expense_categorizer.is_trained = True
+                except Exception as train_err:
+                    print(f"ML Service: Training failed: {train_err}")
+                    return "Unknown", 0.0
 
-            return self.expense_categorizer.predict(description)
+            result = self.expense_categorizer.predict(description)
+            print(f"ML Service: '{description}' -> {result}")
+            return result
         except Exception as e:
             print(f"ML prediction error: {e}")
             # Return default on error

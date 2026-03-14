@@ -742,7 +742,10 @@ class UltraHighAccuracyCategorizer:
         if not self.is_trained:
             raise ValueError("Model must be trained first")
 
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        # Handle /tmp directory for serverless environments (Vercel, AWS Lambda)
+        if not filepath.startswith('/tmp'):
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        
         with open(filepath, 'wb') as f:
             pickle.dump({
                 'pipeline': self.pipeline,

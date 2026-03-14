@@ -14,6 +14,16 @@ from database.setup_postgres import init_db, migrate_user_profiles
 init_db()
 migrate_user_profiles()
 
+# Initialize ML service to train/load model on cold start
+try:
+    from services.ml_service import MLService
+    print("Vercel: Initializing ML service...")
+    ml_instance = MLService()
+    print(f"Vercel: ML service initialized - model_loaded={ml_instance.model_loaded}, is_trained={ml_instance.expense_categorizer.is_trained if ml_instance else False}")
+except Exception as e:
+    print(f"Vercel: Warning - ML service initialization failed: {e}")
+    print("Vercel: ML categorization will train on first request")
+
 # Create the Flask app instance
 app = create_app()
 
