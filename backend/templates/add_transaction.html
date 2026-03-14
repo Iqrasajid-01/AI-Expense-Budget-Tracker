@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}Add Transaction - Smart Budget{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10 col-md-12">
+            <div class="page-header mb-5">
+                <h1 class="page-title">Add New Transaction</h1>
+                <p class="page-subtitle">Quickly add your expense or income with AI-powered categorization</p>
+            </div>
+
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-6">
+                    <form method="POST" action="{{ url_for('add_transaction') }}">
+                        <div class="mb-5">
+                            <label for="description" class="form-label fw-bold fs-5 mb-3">Transaction Description</label>
+                            <div class="position-relative">
+                                <input type="text" class="form-control form-control-lg px-4 py-3" id="description" name="description" placeholder="Describe your transaction (e.g., 'bought groceries at Walmart', 'received salary', 'paid rent')..." required autocomplete="off" style="font-size: 1.1rem;">
+                                <div class="ai-indicator" id="aiIndicator">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                            </div>
+                            <div class="form-text mt-3">
+                                <i class="fas fa-info-circle me-2"></i>Our AI will automatically categorize your transaction as you type with 90%+ accuracy
+                            </div>
+
+                            <!-- Enhanced ML Suggestion Box -->
+                            <div class="ml-suggestion-box mt-4" id="mlSuggestionBox">
+                                <div class="ml-suggestion-header">
+                                    <h6 class="mb-0"><i class="fas fa-lightbulb me-2 text-primary"></i>AI Suggestion</h6>
+                                    <span class="badge bg-primary" id="suggestionBadge">Powered by ML</span>
+                                </div>
+                                <div class="ml-suggestion-content">
+                                    <div>
+                                        <strong>Suggested Category:</strong>
+                                        <span id="suggestedCategory" class="fs-5 fw-bold">-</span>
+                                    </div>
+                                    <div>
+                                        <strong>Confidence:</strong>
+                                        <span id="confidenceScore">0%</span>
+                                        <div class="confidence-meter ms-2">
+                                            <div class="confidence-bar" id="confidenceBar" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-mouse-pointer me-1"></i>
+                                        Click to accept this category or select another from the dropdown below
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-5 mb-5">
+                            <div class="col-md-6">
+                                <label for="amount" class="form-label fw-bold fs-5 mb-3">Amount ($)</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text fs-4">$</span>
+                                    <input type="number" step="0.01" class="form-control fs-4 px-4 py-3" id="amount" name="amount" placeholder="0.00" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="date" class="form-label fw-bold fs-5 mb-3">Date</label>
+                                <input type="date" class="form-control form-control-lg px-4 py-3" id="date" name="date" required>
+                            </div>
+                        </div>
+
+                        <div class="row g-5 mb-5">
+                            <div class="col-md-6">
+                                <label for="type" class="form-label fw-bold fs-5 mb-3">Transaction Type</label>
+                                <select class="form-select form-select-lg px-4 py-3" id="type" name="type" required>
+                                    <option value="expense" selected>💸 Expense (Money Out)</option>
+                                    <option value="income">💰 Income (Money In)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="category" class="form-label fw-bold fs-5 mb-3">Category</label>
+                                <select class="form-select form-select-lg px-4 py-3" id="category" name="category">
+                                    <option value="">🎯 Auto-detect Category (AI)</option>
+                                    {% for category in categories %}
+                                        <option value="{{ category.name }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-4">
+                            <button type="submit" class="btn btn-primary btn-lg py-4 fs-5">
+                                <i class="fas fa-plus-circle me-3"></i>Add Transaction
+                            </button>
+                            <a href="{{ url_for('transactions') }}" class="btn btn-outline-secondary btn-lg py-3">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Transactions
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Tips Section -->
+            <div class="card mt-5 border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4"><i class="fas fa-lightbulb text-warning me-2"></i>Quick Tips for Better Categorization</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 h-100">
+                                <i class="fas fa-shopping-cart text-primary fs-4 mb-2"></i>
+                                <h6>Be Specific</h6>
+                                <small>Use specific terms like "groceries at Walmart" instead of just "shopping"</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 h-100">
+                                <i class="fas fa-tags text-success fs-4 mb-2"></i>
+                                <h6>Include Keywords</h6>
+                                <small>Mention business names, brands, or specific categories in your description</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light rounded p-3 h-100">
+                                <i class="fas fa-brain text-info fs-4 mb-2"></i>
+                                <h6>High Accuracy</h6>
+                                <small>Our AI achieves 90%+ accuracy with detailed descriptions</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set today's date as default
+    document.getElementById('date').valueAsDate = new Date();
+
+    // Enhanced ML categorization with real-time suggestions
+    const descriptionInput = document.getElementById('description');
+    const aiIndicator = document.getElementById('aiIndicator');
+    const mlSuggestionBox = document.getElementById('mlSuggestionBox');
+    const suggestedCategorySpan = document.getElementById('suggestedCategory');
+    const confidenceScoreSpan = document.getElementById('confidenceScore');
+    const confidenceBar = document.getElementById('confidenceBar');
+    const categorySelect = document.getElementById('category');
+
+    // Function to trigger ML categorization
+    function categorizeDescription(description) {
+        if (!description.trim()) {
+            hideMlSuggestions();
+            return;
+        }
+
+        // Show AI indicator
+        aiIndicator.classList.add('active');
+
+        // Call ML API
+        fetch('/api/ml/categorize', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                description: description
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Hide AI indicator
+            aiIndicator.classList.remove('active');
+
+            if (data.category && data.confidence) {
+                // Show suggestion
+                suggestedCategorySpan.textContent = data.category;
+                const confidencePercent = (data.confidence * 100).toFixed(1);
+                confidenceScoreSpan.textContent = confidencePercent + '%';
+
+                // Update confidence bar
+                confidenceBar.style.width = confidencePercent + '%';
+
+                // Apply color based on confidence level
+                if (data.confidence >= 0.9) {
+                    confidenceBar.style.background = 'linear-gradient(90deg, #2ecc71, #27ae60)';
+                    suggestedCategorySpan.className = 'text-success fw-bold fs-5';
+                    confidenceScoreSpan.className = 'text-success fw-bold';
+                } else if (data.confidence >= 0.75) {
+                    confidenceBar.style.background = 'linear-gradient(90deg, #3498db, #2980b9)';
+                    suggestedCategorySpan.className = 'text-info fw-bold fs-5';
+                    confidenceScoreSpan.className = 'text-info fw-bold';
+                } else if (data.confidence >= 0.6) {
+                    confidenceBar.style.background = 'linear-gradient(90deg, #f39c12, #e67e22)';
+                    suggestedCategorySpan.className = 'text-warning fw-bold fs-5';
+                    confidenceScoreSpan.className = 'text-warning fw-bold';
+                } else {
+                    confidenceBar.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)';
+                    suggestedCategorySpan.className = 'text-danger fw-bold fs-5';
+                    confidenceScoreSpan.className = 'text-danger fw-bold';
+                }
+
+                mlSuggestionBox.classList.add('show');
+
+                // Auto-select category if confidence is high enough (75% threshold)
+                if (data.confidence > 0.75) {
+                    for (let i = 0; i < categorySelect.options.length; i++) {
+                        if (categorySelect.options[i].value.toLowerCase() === data.category.toLowerCase()) {
+                            categorySelect.selectedIndex = i;
+
+                            // Add visual feedback for auto-selection
+                            categorySelect.classList.add('border-success', 'shadow-success');
+                            setTimeout(() => {
+                                categorySelect.classList.remove('border-success', 'shadow-success');
+                            }, 2000);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                hideMlSuggestions();
+            }
+        })
+        .catch(error => {
+            console.error('ML categorization error:', error);
+            aiIndicator.classList.remove('active');
+            hideMlSuggestions();
+        });
+    }
+
+    // Hide ML suggestions
+    function hideMlSuggestions() {
+        mlSuggestionBox.classList.remove('show');
+        suggestedCategorySpan.textContent = '-';
+        confidenceScoreSpan.textContent = '0%';
+        confidenceBar.style.width = '0%';
+        confidenceBar.style.background = 'linear-gradient(90deg, var(--success-color), var(--warning-color))';
+    }
+
+    // Event listeners for real-time categorization
+    descriptionInput.addEventListener('input', function() {
+        const description = this.value.trim();
+        if (description.length > 2) { // Only categorize after 3+ characters
+            // Debounce the API call to avoid too many requests
+            clearTimeout(this.debounceTimeout);
+            this.debounceTimeout = setTimeout(() => {
+                categorizeDescription(description);
+            }, 500);
+        } else {
+            hideMlSuggestions();
+        }
+    });
+
+    // When user clicks on the suggested category, select it in the dropdown
+    mlSuggestionBox.addEventListener('click', function() {
+        const suggestedCat = suggestedCategorySpan.textContent;
+        if (suggestedCat && suggestedCat !== '-' && suggestedCat !== 'Loading...') {
+            for (let i = 0; i < categorySelect.options.length; i++) {
+                if (categorySelect.options[i].value.toLowerCase() === suggestedCat.toLowerCase()) {
+                    categorySelect.selectedIndex = i;
+
+                    // Visual feedback for selection
+                    categorySelect.classList.add('border-primary', 'shadow');
+                    setTimeout(() => {
+                        categorySelect.classList.remove('border-primary', 'shadow');
+                    }, 1500);
+                    break;
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

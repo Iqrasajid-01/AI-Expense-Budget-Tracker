@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Smart Budget{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header mb-5">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Your financial overview with AI-powered insights</p>
+    </div>
+
+    <!-- Financial Summary Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card h-100">
+                <div class="text-center">
+                    <div class="icon mb-3">
+                        <i class="fas fa-arrow-down text-success" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h5 class="stat-label">Total Income</h5>
+                    <div class="stat-value">${{ total_income|round(2) if total_income else 0.00 }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card h-100">
+                <div class="text-center">
+                    <div class="icon mb-3">
+                        <i class="fas fa-arrow-up text-danger" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h5 class="stat-label">Total Expenses</h5>
+                    <div class="stat-value">${{ total_expenses|round(2) if total_expenses else 0.00 }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card h-100">
+                <div class="text-center">
+                    <div class="icon mb-3">
+                        <i class="fas fa-wallet text-primary" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h5 class="stat-label">Net Worth</h5>
+                    <div class="stat-value {{ 'text-success' if net_worth >= 0 else 'text-danger' }}">${{ net_worth|round(2) if net_worth else 0.00 }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card h-100">
+                <div class="text-center">
+                    <div class="icon mb-3">
+                        <i class="fas fa-percent text-info" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h5 class="stat-label">Savings Rate</h5>
+                    <div class="stat-value text-info">{{ savings_rate|round(2) if savings_rate else 0.00 }}%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="gradient-bg rounded-4 mb-5">
+        <div class="row g-4 align-items-center">
+            <div class="col-md-8">
+                <h3 class="mb-2">Ready to manage your finances?</h3>
+                <p class="mb-0 text-muted">Add transactions, track spending, and get AI-powered insights</p>
+            </div>
+            <div class="col-md-4">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('add_transaction') }}" class="btn btn-primary btn-lg py-3">
+                        <i class="fas fa-plus-circle me-2"></i> Add Transaction
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-transparent border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-receipt me-2 text-primary"></i> Recent Transactions
+                        </h5>
+                        <a href="{{ url_for('transactions') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-1"></i> View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Type</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in recent_transactions[:5] %}
+                                <tr class="transaction-row">
+                                    <td class="align-middle">{{ transaction.date }}</td>
+                                    <td class="align-middle">{{ transaction.description }}</td>
+                                    <td class="align-middle">
+                                        {% if transaction.category_name %}
+                                            <span class="badge category-badge bg-primary">{{ transaction.category_name }}</span>
+                                        {% else %}
+                                            <span class="badge category-badge bg-secondary">Uncategorized</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="align-middle">
+                                        {% if transaction.type == 'income' %}
+                                            <span class="badge category-badge bg-success"><i class="fas fa-arrow-down me-1"></i> Income</span>
+                                        {% else %}
+                                            <span class="badge category-badge bg-danger"><i class="fas fa-arrow-up me-1"></i> Expense</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end align-middle">
+                                        {% if transaction.type == 'income' %}
+                                            <span class="text-success fw-bold">+${{ "%.2f"|format(transaction.amount) }}</span>
+                                        {% else %}
+                                            <span class="text-danger fw-bold">-${{ "%.2f"|format(transaction.amount) }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-4">
+                            <i class="fas fa-receipt text-muted" style="font-size: 4rem;"></i>
+                        </div>
+                        <h5 class="text-muted mb-3">No transactions yet</h5>
+                        <p class="text-muted mb-4">Start tracking your finances by adding your first transaction</p>
+                        <a href="{{ url_for('add_transaction') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus-circle me-2"></i> Add Your First Transaction
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Insights & Predictions -->
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="icon mb-3 mx-auto" style="width: 60px; height: 60px; background: linear-gradient(135deg, #4cc9f0, #4361ee); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-calendar-week text-white" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <h5 class="card-title">Weekly Prediction</h5>
+                    <h3 class="text-success mb-2">${{ weekly_prediction|round(2) if weekly_prediction else 0.00 }}</h3>
+                    <p class="text-muted mb-0">Estimated spending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="icon mb-3 mx-auto" style="width: 60px; height: 60px; background: linear-gradient(135deg, #f72585, #b5179e); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-calendar-month text-white" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <h5 class="card-title">Monthly Prediction</h5>
+                    <h3 class="text-primary mb-2">${{ monthly_prediction|round(2) if monthly_prediction else 0.00 }}</h3>
+                    <p class="text-muted mb-0">Estimated spending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="icon mb-3 mx-auto" style="width: 60px; height: 60px; background: linear-gradient(135deg, #4895ef, #4cc9f0); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-calendar text-white" style="font-size: 1.5rem;"></i>
+                    </div>
+                    <h5 class="card-title">Yearly Prediction</h5>
+                    <h3 class="text-info mb-2">${{ yearly_prediction|round(2) if yearly_prediction else 0.00 }}</h3>
+                    <p class="text-muted mb-0">Estimated spending</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Enhanced dashboard functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add subtle animations to cards when they come into view
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards
+        document.querySelectorAll('.card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Edit Transaction - Budget Tracker{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <i class="fas fa-edit me-2"></i>Edit Transaction
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('edit_transaction', id=transaction.id) }}">
+                        <div class="mb-4">
+                            <label class="form-label">Transaction Type</label>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check" name="type" id="typeExpense" value="Expense" 
+                                           {{ 'checked' if transaction.type == 'Expense' else '' }}>
+                                    <label class="btn btn-outline-danger w-100 py-3" for="typeExpense">
+                                        <i class="fas fa-arrow-up d-block mb-1" style="font-size: 1.5rem;"></i>
+                                        <strong>Expense</strong>
+                                    </label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check" name="type" id="typeIncome" value="Income"
+                                           {{ 'checked' if transaction.type == 'Income' else '' }}>
+                                    <label class="btn btn-outline-success w-100 py-3" for="typeIncome">
+                                        <i class="fas fa-arrow-down d-block mb-1" style="font-size: 1.5rem;"></i>
+                                        <strong>Income</strong>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Amount ($)</label>
+                            <input type="number" class="form-control form-control-lg" name="amount" 
+                                   value="{{ transaction.amount }}" step="0.01" min="0.01" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Description</label>
+                            <input type="text" class="form-control form-control-lg" name="description" 
+                                   value="{{ transaction.description }}" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Category</label>
+                            <select class="form-select form-select-lg" name="category">
+                                <option value="">-- Select Category --</option>
+                                <option value="Food & Dining" {{ 'selected' if transaction.category == 'Food & Dining' else '' }}>🍔 Food & Dining</option>
+                                <option value="Transportation" {{ 'selected' if transaction.category == 'Transportation' else '' }}>🚗 Transportation</option>
+                                <option value="Housing" {{ 'selected' if transaction.category == 'Housing' else '' }}>🏠 Housing</option>
+                                <option value="Entertainment" {{ 'selected' if transaction.category == 'Entertainment' else '' }}>🎬 Entertainment</option>
+                                <option value="Healthcare" {{ 'selected' if transaction.category == 'Healthcare' else '' }}>🏥 Healthcare</option>
+                                <option value="Shopping" {{ 'selected' if transaction.category == 'Shopping' else '' }}>🛍️ Shopping</option>
+                                <option value="Travel" {{ 'selected' if transaction.category == 'Travel' else '' }}>✈️ Travel</option>
+                                <option value="Education" {{ 'selected' if transaction.category == 'Education' else '' }}>📚 Education</option>
+                                <option value="Salary" {{ 'selected' if transaction.category == 'Salary' else '' }}>💰 Salary</option>
+                                <option value="Investment" {{ 'selected' if transaction.category == 'Investment' else '' }}>📈 Investment</option>
+                                <option value="Utilities" {{ 'selected' if transaction.category == 'Utilities' else '' }}>💡 Utilities</option>
+                                <option value="Personal Care" {{ 'selected' if transaction.category == 'Personal Care' else '' }}>💅 Personal Care</option>
+                                <option value="Insurance" {{ 'selected' if transaction.category == 'Insurance' else '' }}>🛡️ Insurance</option>
+                                <option value="Debt Payment" {{ 'selected' if transaction.category == 'Debt Payment' else '' }}>💳 Debt Payment</option>
+                                <option value="Gifts & Donations" {{ 'selected' if transaction.category == 'Gifts & Donations' else '' }}>🎁 Gifts & Donations</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control form-control-lg" name="date" 
+                                   value="{{ transaction.date }}" required>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                            <a href="{{ url_for('transactions') }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

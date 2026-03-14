@@ -1,0 +1,29 @@
+[project]
+name = "expense-budget-webapp"
+version = "1.0.0"
+description = "Expense Budget Web Application"
+requires-python = ">=3.12"
+dependencies = [
+    "flask==2.3.3",
+    "flask-login==0.6.3",
+    "werkzeug==2.3.7",
+    "scikit-learn==1.5.0",
+    "pandas==2.2.0",
+    "numpy==1.26.4",
+    "matplotlib==3.8.0",
+    "seaborn==0.13.0",
+    "requests==2.31.0",
+    "gunicorn==21.2.0",
+    "psycopg2-binary==2.9.9",
+]
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["api*"]
+
+[tool.uv]
+dev-dependencies = []

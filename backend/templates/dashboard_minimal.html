@@ -1,0 +1,214 @@
+{% extends "base_minimal.html" %}
+
+{% block title %}Dashboard - Budget{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header fade-in">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Overview of your finances</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card success fade-in">
+            <i class="fas fa-arrow-down text-success" style="font-size: 1.5rem;"></i>
+            <div class="stat-value">${{ "%.2f"|format(total_income) }}</div>
+            <p class="stat-label">Total Income</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card danger fade-in">
+            <i class="fas fa-arrow-up text-danger" style="font-size: 1.5rem;"></i>
+            <div class="stat-value">${{ "%.2f"|format(total_expenses) }}</div>
+            <p class="stat-label">Total Expenses</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card primary fade-in">
+            <i class="fas fa-piggy-bank text-primary" style="font-size: 1.5rem;"></i>
+            <div class="stat-value">${{ "%.2f"|format(net_worth) }}</div>
+            <p class="stat-label">Net Worth</p>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+    <div class="col-md-8">
+        <div class="card fade-in">
+            <div class="card-header">
+                <i class="fas fa-chart-pie me-2"></i>Expenses by Category
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card fade-in">
+            <div class="card-header">
+                <i class="fas fa-chart-line me-2"></i>Budget Progress
+            </div>
+            <div class="card-body">
+                <canvas id="budgetChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Transactions -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-exchange-alt me-2"></i>Recent Transactions</span>
+        <a href="{{ url_for('transactions') }}" class="btn btn-sm btn-outline-primary">View All</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Type</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in recent_transactions[:5] %}
+                    <tr>
+                        <td>{{ transaction.date }}</td>
+                        <td>{{ transaction.description }}</td>
+                        <td>
+                            {% if transaction.category %}
+                            <span class="badge category-{{ transaction.category|lower|replace(' ', '-')|replace('&', '') }}">
+                                {{ transaction.category }}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">Uncategorized</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ 'success' if transaction.type == 'Income' else 'danger' }}">
+                                {{ transaction.type }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <strong class="{{ 'text-success' if transaction.type == 'Income' else 'text-danger' }}">
+                                ${{ "%.2f"|format(transaction.amount) }}
+                            </strong>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox me-2"></i>No transactions yet. 
+                            <a href="{{ url_for('add_transaction') }}">Add your first transaction</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Budget Predictions -->
+<div class="row g-4 mt-4">
+    <div class="col-md-4">
+        <div class="card fade-in">
+            <div class="card-body text-center">
+                <p class="text-muted mb-1">Weekly Prediction</p>
+                <h3 class="mb-0">${{ "%.2f"|format(weekly_prediction) }}</h3>
+                <small class="text-muted">Based on spending patterns</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card fade-in">
+            <div class="card-body text-center">
+                <p class="text-muted mb-1">Monthly Prediction</p>
+                <h3 class="mb-0">${{ "%.2f"|format(monthly_prediction) }}</h3>
+                <small class="text-muted">Based on spending patterns</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card fade-in">
+            <div class="card-body text-center">
+                <p class="text-muted mb-1">Yearly Prediction</p>
+                <h3 class="mb-0">${{ "%.2f"|format(yearly_prediction) }}</h3>
+                <small class="text-muted">Based on spending patterns</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Category Chart
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+new Chart(categoryCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Food', 'Transport', 'Shopping', 'Entertainment', 'Other'],
+        datasets: [{
+            data: [30, 20, 25, 15, 10],
+            backgroundColor: [
+                '#fef3c7',
+                '#dbeafe', 
+                '#fce7f3',
+                '#ede9fe',
+                '#f3f4f6'
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { padding: 15, usePointStyle: true }
+            }
+        },
+        cutout: '60%'
+    }
+});
+
+// Budget Progress Chart
+const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+new Chart(budgetCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Weekly', 'Monthly', 'Yearly'],
+        datasets: [{
+            label: 'Predicted',
+            data: [{{ weekly_prediction }}, {{ monthly_prediction }}, {{ yearly_prediction }}],
+            backgroundColor: '#2563eb',
+            borderRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { display: false }
+            },
+            x: {
+                grid: { display: false }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

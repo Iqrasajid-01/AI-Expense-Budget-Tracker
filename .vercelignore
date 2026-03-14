@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Test files - DO NOT DEPLOY
+test_*.py
+*_test.py
+*_test*.py
+test*.py
+
+# Documentation
+docs/_build/
+
+# Misc
+.DS_Store
+*.log
+.env
+.qwen/
+
+# Demo and debug files
+run_demo.py
+migrate_db.py
+
+# Database files (but NOT the Python files)
+database/*.db
+database/*.db-journal
+*.db
+*.db-journal

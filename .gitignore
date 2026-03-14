@@ -1,0 +1,89 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+venv/
+env/
+.venv/
+ENV/
+.ENV
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+.coverage.*
+.htmlcov/
+.pyup.yml
+.isort.cfg
+.tox/
+noxfile.py
+
+# Flask
+instance/
+.webassets-cache
+*.swp
+*.swo
+
+# Database
+*.db
+*.db-journal
+database/*.db
+database/*.db-journal
+
+# ML Models
+ml_models/trained_models/*.pkl
+ml_models/trained_models/*.joblib
+ml_models/trained_models/*.model
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+.envrc
+.env.localrc
+*.env
+*.env.local
+*.env.*.local
+*.envrc
+*.env.localrc
+
+# Logs
+*.log
+logs/
+log/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

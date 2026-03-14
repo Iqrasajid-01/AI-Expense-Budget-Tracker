@@ -1,0 +1,98 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Transactions - Budget Tracker{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <!-- Header -->
+    <div class="card fade-in mb-4">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-list" style="font-size: 4rem; color: var(--primary);"></i>
+            <h2 class="mt-3 mb-2">All Transactions</h2>
+            <p class="text-muted">View and manage your financial records</p>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="card fade-in">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Type</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.date }}</td>
+                            <td>
+                                <strong>{{ transaction.description }}</strong>
+                            </td>
+                            <td>
+                                {% if transaction.category %}
+                                <span class="category-badge cat-{{ transaction.category|lower|replace(' ', '-')|replace('&', '') }}">
+                                    {{ transaction.category }}
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">Uncategorized</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge badge-{{ 'success' if transaction.type == 'Income' else 'danger' }}">
+                                    {{ transaction.type }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <strong class="{{ 'text-success' if transaction.type == 'Income' else 'text-danger' }}">
+                                    {{ '+$' if transaction.type == 'Income' else '-$' }}{{ "%.2f"|format(transaction.amount) }}
+                                </strong>
+                            </td>
+                            <td class="text-end">
+                                <a href="{{ url_for('edit_transaction', id=transaction.id) }}" 
+                                   class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('delete_transaction', id=transaction.id) }}" 
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Delete this transaction?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <h3>No transactions yet</h3>
+                                    <p class="mb-3">Start tracking your expenses today!</p>
+                                    <a href="{{ url_for('add_transaction') }}" class="btn btn-primary">
+                                        <i class="fas fa-plus me-2"></i>Add First Transaction
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Button -->
+    <div class="text-center mt-4">
+        <a href="{{ url_for('add_transaction') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus me-2"></i>Add New Transaction
+        </a>
+    </div>
+</div>
+{% endblock %}

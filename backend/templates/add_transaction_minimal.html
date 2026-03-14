@@ -1,0 +1,153 @@
+{% extends "base_minimal.html" %}
+
+{% block title %}Add Transaction - Budget{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header fade-in">
+    <h1 class="page-title">Add Transaction</h1>
+    <p class="page-subtitle">Record a new expense or income</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card fade-in">
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('add_transaction') }}" id="transactionForm">
+                    
+                    <!-- Transaction Type -->
+                    <div class="mb-4">
+                        <label class="form-label">Transaction Type</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="type" id="typeExpense" value="Expense" checked>
+                            <label class="btn btn-outline-danger" for="typeExpense">
+                                <i class="fas fa-arrow-up me-2"></i>Expense
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="type" id="typeIncome" value="Income">
+                            <label class="btn btn-outline-success" for="typeIncome">
+                                <i class="fas fa-arrow-down me-2"></i>Income
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Amount -->
+                    <div class="mb-4">
+                        <label class="form-label" for="amount">Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="amount" name="amount" 
+                                   step="0.01" min="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label class="form-label" for="description">Description</label>
+                        <input type="text" class="form-control" id="description" name="description" 
+                               required placeholder="e.g., Starbucks coffee, Shell gas station">
+                        <div class="form-text">Be specific for better AI categorization</div>
+                    </div>
+
+                    <!-- ML Suggestion Box -->
+                    <div class="ml-suggestion" id="mlSuggestion">
+                        <div class="ml-suggestion-label">AI Suggested Category</div>
+                        <div class="ml-suggestion-value" id="suggestedCategory">
+                            <i class="fas fa-spinner spinner me-2"></i>Analyzing...
+                        </div>
+                    </div>
+
+                    <!-- Category -->
+                    <div class="mb-4">
+                        <label class="form-label" for="category">Category (Optional)</label>
+                        <select class="form-select" id="category" name="category">
+                            <option value="">-- Let AI categorize automatically --</option>
+                            <option value="Food & Dining">Food & Dining</option>
+                            <option value="Transportation">Transportation</option>
+                            <option value="Housing">Housing</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Travel">Travel</option>
+                            <option value="Education">Education</option>
+                            <option value="Salary">Salary</option>
+                            <option value="Investment">Investment</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Personal Care">Personal Care</option>
+                            <option value="Insurance">Insurance</option>
+                            <option value="Debt Payment">Debt Payment</option>
+                            <option value="Gifts & Donations">Gifts & Donations</option>
+                        </select>
+                    </div>
+
+                    <!-- Date -->
+                    <div class="mb-4">
+                        <label class="form-label" for="date">Date</label>
+                        <input type="date" class="form-control" id="date" name="date" required>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus me-2"></i>Add Transaction
+                        </button>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let debounceTimer;
+
+// Set today's date as default
+document.getElementById('date').valueAsDate = new Date();
+
+// Auto-categorize on description input
+document.getElementById('description').addEventListener('input', function(e) {
+    clearTimeout(debounceTimer);
+    const description = e.target.value.trim();
+    
+    if (description.length < 3) {
+        document.getElementById('mlSuggestion').classList.remove('show');
+        return;
+    }
+    
+    debounceTimer = setTimeout(() => {
+        fetch('/api/ml/categorize', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ description: description })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const suggestionBox = document.getElementById('mlSuggestion');
+            const suggestedCategory = document.getElementById('suggestedCategory');
+            
+            suggestedCategory.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                ${data.category}
+                <span class="text-muted ms-2">(${(data.confidence * 100).toFixed(0)}% confidence)</span>
+            `;
+            suggestionBox.classList.add('show');
+            
+            // Auto-fill category if confidence is high
+            if (data.confidence > 0.7) {
+                document.getElementById('category').value = data.category;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }, 500);
+});
+</script>
+{% endblock %}
