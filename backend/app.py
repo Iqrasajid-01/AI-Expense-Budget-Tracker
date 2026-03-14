@@ -301,15 +301,15 @@ def create_app():
     def save_preferences():
         """Save user preferences (currency, theme, etc.)"""
         user_id = session['user_id']
-        
+
         currency = request.form.get('currency', 'USD').strip()
-        
-        from database.setup_db import update_user_profile
+
+        from database.setup_postgres import update_user_profile
         if update_user_profile(user_id, currency=currency):
             flash('Preferences saved successfully!', 'success')
         else:
             flash('Failed to save preferences.', 'error')
-        
+
         return redirect(url_for('settings'))
 
     @app.route('/edit_transaction/<int:id>', methods=['GET', 'POST'])
